@@ -1,0 +1,29 @@
+name: Build Docker Image
+
+on: [push]  # 只要你提交代码，或者手动触发，机器人就开始干活
+
+jobs:
+  build_and_package:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 机器人把你的代码下载到它自己的肚子里
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. 机器人准备好 Docker 环境
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # 3. 机器人开始构建镜像，并打包成文件
+      - name: Build and Save
+        run: |
+          docker build -t my-quickform:v1 .
+          docker save -o quickform_v1.tar my-quickform:v1
+
+      # 4. 机器人把打包好的文件上传给你下载
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: quickform-offline-package
+          path: quickform_v1.tar
+          retention-days: 1
