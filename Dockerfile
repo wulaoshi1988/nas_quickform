@@ -15,7 +15,7 @@ COPY . .
 # 设置环境变量
 ENV PYTHONUNBUFFERED=1
 
-# 暴露端口（假设 Flask 用 5000）
+# 暴露端口（假设 Flask 用 5011）
 EXPOSE 5000
 
 # 启动命令
