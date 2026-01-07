@@ -16,7 +16,7 @@ COPY . .
 ENV PYTHONUNBUFFERED=1
 
 # 暴露端口（假设 Flask 用 5011）
-EXPOSE 5000
+EXPOSE 5011
 
 # 启动命令
 CMD ["python", "app.py"]
