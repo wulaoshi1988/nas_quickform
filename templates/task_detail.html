@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ task.title }} - QuickForm{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between items-center mb-4">
+            <h2>{{ task.title }}</h2>
+            <div>
+                <a href="{{ url_for('export_data', task_id=task.id) }}" class="btn btn-success me-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                        <path d="M8 4a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-1 0v-8A.5.5 0 0 1 8 4z"/>
+                        <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0z"/>
+                    </svg>
+                    导出数据
+                </a>
+                <a href="{{ url_for('smart_analyze', task_id=task.id) }}" class="btn btn-info me-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bar-chart2" viewBox="0 0 16 16">
+                        <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3zm5 2v8h2V5H6zm4 0v8h2V5h-2zm4 0v8h2V5h-2z"/>
+                    </svg>
+                    数据分析
+                </a>
+                <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-primary me-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                    </svg>
+                    编辑任务
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">返回列表</a>
+            </div>
+        </div>
+        
+        <!-- 任务信息卡片 -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">任务信息</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>创建时间：</strong>{{ task.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        <p><strong>提交数量：</strong>{{ submission|length }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong>提交URL：</strong>
+                            <div class="input-group">
+                                <input type="text" class="form-control" readonly value="{{ request.host_url }}api/submit/{{ task.task_id }}" id="task-url">
+                                <button class="btn btn-outline-secondary" onclick="copyToClipboard('task-url')">复制</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if task.description %}
+                <div class="mt-3">
+                    <strong>任务描述：</strong>
+                    <p>{{ task.description }}</p>
+                </div>
+                {% endif %}
+                
+                {% if task.file_name %}
+                <div class="mt-3">
+                    <strong>已上传文件：</strong>
+                    <a href="{{ url_for('uploaded_file', filename=task.file_path.split('/')[-1]) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark" viewBox="0 0 16 16">
+                            <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3-2A1.5 1.5 0 0 1 9.5 0H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5a1.5 1.5 0 0 1-1.5 1.5H11a1.5 1.5 0 0 1-1.5-1.5z"/>
+                        </svg>
+                        {{ task.file_name }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 提交代码提示词 -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">数据提交说明</h5>
+            </div>
+            <div class="card-body">
+                <p>创建应用后，通过POST指令提交数据到以下URL：</p>
+                
+                <div class="mb-4">
+                    <strong>数据接口地址（URL）：</strong>
+                    <div class="input-group mt-2">
+                        <input type="text" class="form-control" readonly value="{{ request.host_url }}api/submit/{{ task.task_id }}" id="submit-url">
+                        <button class="btn btn-outline-secondary" onclick="copyToClipboard('submit-url')">复制</button>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <strong>精简版提示词（点击复制）：</strong>
+                    <div class="input-group mt-2">
+                        <input type="text" class="form-control" readonly value="创建完应用后，向 '{{ request.host_url }}api/submit/{{ task.task_id }}' 发送post格式的json数据" id="simple-instruction">
+                        <button class="btn btn-outline-secondary" onclick="copyToClipboard('simple-instruction')">复制</button>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>💡 数据查询功能：</strong>
+                    <span>直接访问该网址就能看到已收集的数据，可以用它继续制作实时反馈排名页面。</span>
+                </div>
+                
+                <!-- 折叠面板 - 完整版提示词 -->
+                <div class="accordion" id="fullInstructionAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingFullInstruction">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFullInstruction" aria-expanded="false" aria-controls="collapseFullInstruction">
+                                <strong>完整版提示词（点击展开/复制）</strong>
+                            </button>
+                        </h2>
+                        <div id="collapseFullInstruction" class="accordion-collapse collapse" aria-labelledby="headingFullInstruction" data-bs-parent="#fullInstructionAccordion">
+                            <div class="accordion-body">
+                                <p>生成应用后，产生的数据用以下方法传到服务器：</p>
+                                
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <pre class="mb-0"><code>&lt;script&gt;
+function sendTestData() {
+    const url = '{{ request.host_url }}api/submit/{{ task.task_id }}';
+    const data = {"字段1": "值1", "字段2": "值2"};
+    document.getElementById('send-result').textContent = "提交中...";
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(async r => {
+        const text = await r.text();
+        let json = {};
+        try {
+            json = JSON.parse(text);
+        } catch(e) {
+            json = {raw: text};
+        }
+        if (!r.ok) throw new Error(json.error || json.message || `HTTP ${r.status}`);
+        return json;
+    })
+    .then(d => {
+        document.getElementById('send-result').textContent = "提交成功: " + JSON.stringify(d);
+        document.getElementById('send-result').style.color = '#28a745';
+        console.log('提交成功:', d);
+    })
+    .catch(e => {
+        document.getElementById('send-result').textContent = "提交失败: " + e.message;
+        document.getElementById('send-result').style.color = '#dc3545';
+        console.error('提交失败:', e, 'URL:', url, 'Data:', data);
+    });
+}
+&lt;/script&gt;</code></pre>
+                                </div>
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button class="btn btn-primary me-md-2" type="button" onclick="copyFullScript()">复制完整代码</button>
+                                </div>
+                                
+                                <div id="send-result" class="mt-3 p-2 bg-light rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 提交数据列表 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">提交数据列表</h5>
+            </div>
+            <div class="card-body">
+                {% if submission %}
+                <div class="overflow-auto">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>提交时间</th>
+                                <th>数据内容</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in submission %}
+                            <tr>
+                                <td>{{ sub.id }}</td>
+                                <td>{{ sub.submitted_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-link p-0" onclick="showModal('dataModal-{{ sub.id }}');">
+                                        查看数据
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                            <!-- 自定义数据详情模态框 - 解决浏览器兼容性问题 -->
+                            <div id="dataModal-{{ sub.id }}" class="modal" tabindex="-1" aria-labelledby="dataModalLabel-{{ sub.id }}" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; overflow: hidden;">
+                                <!-- 移除背景遮罩 -->
+                                
+                                <!-- 模态框外部容器 - 防止鼠标事件影响模态框 -->
+                                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1040;" onclick="event.stopPropagation();">
+                                <!-- 模态框容器 - 固定在页面中央 -->
+                                <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; margin: 0; display: flex; align-items: center; justify-content: center;" onclick="event.stopPropagation();">
+                                    <!-- 模态框内容 - 简化样式 -->
+                                    <div class="modal-content" style="width: 90%; height: 90%; max-height: 500px; max-width: 900px; display: flex; flex-direction: column; background: white; margin: 0; padding: 0;" onclick="event.stopPropagation();">
+                                        <div class="modal-header" style="padding: 10px 15px; border-bottom: 1px solid #dee2e6; margin: 0;" onclick="event.stopPropagation();">
+                                            <h5 class="modal-title" id="dataModalLabel-{{ sub.id }}" style="margin: 0; font-size: 16px;" onclick="event.stopPropagation();">提交数据详情 #{{ sub.id }}</h5>
+                                            <button type="button" class="btn-close" onclick="closeModal('dataModal-{{ sub.id }}');" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body" style="padding: 15px; flex-grow: 1; overflow-y: auto; margin: 0;" onclick="event.stopPropagation();">
+                                            <p style="margin: 0 0 10px 0; font-size: 14px;" onclick="event.stopPropagation();"><strong>提交时间：</strong>{{ sub.submitted_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                                            <div style="margin: 0;" onclick="event.stopPropagation();">
+                                                <h6 style="margin: 0 0 8px 0; font-size: 14px;" onclick="event.stopPropagation();">数据内容：</h6>
+                                                <pre class="bg-light p-3 rounded overflow-auto" style="font-size: 16px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; margin: 0; min-height: 300px;" onclick="event.stopPropagation();">{{ sub.data }}</pre>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer" style="padding: 10px 15px; border-top: 1px solid #dee2e6; justify-content: flex-end; margin: 0;" onclick="event.stopPropagation();">
+                                            <button type="button" class="btn btn-secondary" onclick="closeModal('dataModal-{{ sub.id }}');">关闭</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div class="mt-4">
+                    <p class="text-center">共 {{ submission|length }} 条记录</p>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#6c757d" class="bi bi-database" viewBox="0 0 16 16">
+                            <path d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z"/>
+                            <path d="M6.5 16a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1H6.5v1zm-2-1a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-1H4.5v1z"/>
+                        </svg>
+                    </div>
+                    <h4>暂无提交数据</h4>
+                    <p class="text-muted mb-4">当用户通过表单提交数据后，将在这里显示</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    function copyToClipboard(elementId) {
+        const element = document.getElementById(elementId);
+        element.select();
+        element.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        
+        // 显示复制成功提示
+        const btn = element.nextElementSibling;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg> 已复制';
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+        }, 2000);
+    }
+    
+    function copyFullScript() {
+        // 获取完整版提示词中的代码
+        const codeElement = document.querySelector('#collapseFullInstruction pre code');
+        if (codeElement) {
+            // 创建临时textarea来复制代码
+            const textarea = document.createElement('textarea');
+            textarea.value = codeElement.textContent;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            // 显示复制成功提示
+            const btn = document.querySelector('[onclick="copyFullScript()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg> 已复制';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
+        }
+    }
+
+    // 简化的模态框显示函数
+    function showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            // 确保模态框固定在屏幕中央
+            modal.style.display = 'block';
+            // 阻止事件冒泡
+            modal.addEventListener('mousemove', function(e) {
+                e.stopPropagation();
+            });
+            modal.addEventListener('mouseenter', function(e) {
+                e.stopPropagation();
+            });
+            modal.addEventListener('mouseleave', function(e) {
+                e.stopPropagation();
+            });
+        }
+    }
+
+    // 简化的模态框关闭函数
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+            // 移除事件监听器
+            modal.removeEventListener('mousemove', function(e) {
+                e.stopPropagation();
+            });
+            modal.removeEventListener('mouseenter', function(e) {
+                e.stopPropagation();
+            });
+            modal.removeEventListener('mouseleave', function(e) {
+                e.stopPropagation();
+            });
+        }
+    }
+
+    // 移除可能导致频闪的事件监听器
+    // document.addEventListener('click', function(event) {
+    //     // 检查点击的元素是否为模态框背景
+    //     if (event.target.classList.contains('modal') && event.target.style.display === 'block') {
+    //         event.target.style.display = 'none';
+    //     }
+    // });
+</script>
+{% endblock %}
+{% endblock %}

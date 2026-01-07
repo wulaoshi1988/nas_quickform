@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}仪表盘 - QuickForm{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">QuickForm</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="{{ url_for('dashboard') }}">仪表盘</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('create_task') }}">创建任务</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ current_user.username }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('profile') }}">个人设置</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('logout') }}">退出登录</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4">我的数据任务</h2>
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between items-center">
+                    <h4>任务列表</h4>
+                    <a href="{{ url_for('create_task') }}" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" style="margin-right: 5px;">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                        </svg>
+                        创建新任务
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        {% if tasks %}
+        <div class="row">
+            {% for task in tasks %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="card-title mb-0">{{ task.title }}</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if task.description %}
+                        <p class="card-text mb-3">{{ task.description }}</p>
+                        {% else %}
+                        <p class="card-text mb-3 text-muted">暂无描述</p>
+                        {% endif %}
+                        <div class="mb-3">
+                            <small class="text-muted">创建时间: {{ task.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">提交数量: {{ task.submission|length }}</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-sm font-weight-bold">提交URL:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-sm" readonly value="{{ request.host_url }}api/submit/{{ task.task_id }}" id="url-{{ task.id }}">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('url-{{ task.id }}')">复制</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('task_detail', task_id=task.id) }}" class="btn btn-primary btn-sm">查看详情</a>
+                            <div>
+                                <a href="{{ url_for('export_data', task_id=task.id) }}" class="btn btn-outline-success btn-sm me-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-1 0v-8A.5.5 0 0 1 8 4z"/>
+                                        <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0z"/>
+                                    </svg>
+                                    导出
+                                </a>
+                                <a href="{{ url_for('smart_analyze', task_id=task.id) }}" class="btn btn-outline-info btn-sm me-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-bar-chart2" viewBox="0 0 16 16">
+                                        <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3zm5 2v8h2V5H6zm4 0v8h2V5h-2zm4 0v8h2V5h-2z"/>
+                                    </svg>
+                                    分析
+                                </a>
+                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal-{{ task.id }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                    </svg>
+                                    删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 删除确认模态框 -->
+                <div class="modal fade" id="deleteModal-{{ task.id }}" tabindex="-1" aria-labelledby="deleteModalLabel-{{ task.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteModalLabel-{{ task.id }}">确认删除</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                确定要删除任务 "{{ task.title }}" 吗？此操作无法撤销，相关的所有提交数据也将被删除。
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                <form action="{{ url_for('delete_task', task_id=task.id) }}" method="POST">
+                                    <button type="submit" class="btn btn-danger">确认删除</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#6c757d" class="bi bi-inbox" viewBox="0 0 16 16">
+                        <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4H4.98zm-1.17-.437A1.5 1.5 0 0 1 4.98 3h6.04a1.5 1.5 0 0 1 1.17.563l3.7 4.625a.5.5 0 0 1 .106.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374L3.8 3.563zM3.8 6.5a.5.5 0 0 0-.5.5v6a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5H3.8z"/>
+                    </svg>
+                </div>
+                <h4>还没有创建任何数据任务</h4>
+                <p class="text-muted mb-4">点击下方按钮创建您的第一个数据任务</p>
+                <a href="{{ url_for('create_task') }}" class="btn btn-primary">创建任务</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+    
+    {% block scripts %}
+<script>
+    function copyToClipboard(elementId) {
+        const element = document.getElementById(elementId);
+        // 对于input元素，应该使用value属性而不是textContent
+        const textToCopy = element.tagName === 'INPUT' ? element.value : element.textContent;
+        
+        navigator.clipboard.writeText(textToCopy).then(function() {
+            // 创建临时的提示元素
+            const tooltip = document.createElement('div');
+            tooltip.className = 'position-fixed top-50 start-50 translate-middle bg-success text-white px-4 py-2 rounded shadow-lg';
+            tooltip.textContent = '链接已复制！';
+            tooltip.style.zIndex = '9999';
+            document.body.appendChild(tooltip);
+            
+            // 3秒后移除提示
+            setTimeout(function() {
+                if (tooltip.parentNode) {
+                    document.body.removeChild(tooltip);
+                }
+            }, 3000);
+        }).catch(function(err) {
+            console.error('复制失败:', err);
+            // 添加用户友好的错误提示
+            const errorTooltip = document.createElement('div');
+            errorTooltip.className = 'position-fixed top-50 start-50 translate-middle bg-danger text-white px-4 py-2 rounded shadow-lg';
+            errorTooltip.textContent = '复制失败，请手动复制链接';
+            errorTooltip.style.zIndex = '9999';
+            document.body.appendChild(errorTooltip);
+            
+            // 3秒后移除提示
+            setTimeout(function() {
+                if (errorTooltip.parentNode) {
+                    document.body.removeChild(errorTooltip);
+                }
+            }, 3000);
+        });
+    }
+</script>
+{% endblock %}
+{% endblock %}

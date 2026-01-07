@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}个人设置 - QuickForm{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">个人设置</h4>
+        </div>
+            <div class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <ul class="nav nav-tabs mb-4">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="config-tab" data-bs-toggle="tab" href="#config">AI配置</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="password-tab" data-bs-toggle="tab" href="#password">密码修改</a>
+                    </li>
+                </ul>
+                
+                <div class="tab-content">
+                    <!-- AI配置标签页 -->
+                    <div class="tab-pane fade show active" id="config">
+                        <form method="POST" action="{{ url_for('profile') }}">
+                            <input type="hidden" name="update_config" value="1">
+                            
+                            <div class="form-group">
+                                <label for="selected_model">选择AI模型</label>
+                                <select class="form-control" id="selected_model" name="selected_model" required>
+                                    <option value="deepseek" {% if ai_config and ai_config.selected_model == 'deepseek' %}selected{% endif %}>DeepSeek</option>
+                                    <option value="doubao" {% if ai_config and ai_config.selected_model == 'doubao' %}selected{% endif %}>豆包</option>
+                                    <option value="qwen" {% if ai_config and ai_config.selected_model == 'qwen' %}selected{% endif %}>阿里云百炼</option>
+                                </select>
+                            </div>
+                            
+                            <div id="deepseek_config" class="model-config">
+                                <h5 class="mt-4 mb-3">DeepSeek 配置</h5>
+                                <div class="form-group">
+                                    <label for="deepseek_api_key">API Key</label>
+                                    <input type="password" class="form-control api-key-input" id="deepseek_api_key" name="deepseek_api_key" value="{{ ai_config.deepseek_api_key if ai_config else '' }}">
+                                    <small class="form-text text-muted">请输入您的DeepSeek API密钥</small>
+                                </div>
+                                <button type="button" class="btn btn-info mt-2 test-api-key" data-model="deepseek" data-api-key-field="deepseek_api_key">测试API密钥</button>
+                            </div>
+                            
+                            <div id="doubao_config" class="model-config">
+            <h5 class="mt-4 mb-3">豆包 配置</h5>
+            <div class="form-group">
+                <label for="doubao_api_key">API Key</label>
+                <input type="password" class="form-control api-key-input" id="doubao_api_key" name="doubao_api_key" value="{{ ai_config.doubao_api_key if ai_config else '' }}">
+            </div>
+                                <button type="button" class="btn btn-info mt-2 test-api-key" data-model="doubao" data-api-key-field="doubao_api_key">测试API密钥</button>
+                            </div>
+                            
+                            <div id="qwen_config" class="model-config">
+                                <h5 class="mt-4 mb-3">阿里云百炼 配置</h5>
+                                <div class="form-group">
+                                    <label for="qwen_api_key">API Key</label>
+                                    <input type="password" class="form-control api-key-input" id="qwen_api_key" name="qwen_api_key" value="{{ ai_config.qwen_api_key if ai_config else '' }}">
+                                    <small class="form-text text-muted">请输入您的阿里云百炼 API密钥</small>
+                                </div>
+                                <button type="button" class="btn btn-info mt-2 test-api-key" data-model="qwen" data-api-key-field="qwen_api_key">测试API密钥</button>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success mt-4">保存配置</button>
+                        </form>
+                    </div>
+                    
+                    <!-- 密码修改标签页 -->
+                    <div class="tab-pane fade" id="password">
+                        <form method="POST" action="{{ url_for('profile') }}">
+                            <input type="hidden" name="change_password" value="1">
+                            
+                            <div class="form-group">
+                                <label for="current_password">当前密码</label>
+                                <input type="password" class="form-control" id="current_password" name="current_password" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="new_password">新密码</label>
+                                <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                <small class="form-text text-muted">密码长度至少为6个字符</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirm_password">确认新密码</label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success mt-4">修改密码</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">配置说明</h5>
+            </div>
+            <div class="card-body">
+                <p>配置完成AI模型后，您可以在任务分析页面使用智能分析功能。智能分析将根据您的表单数据和附件内容，生成详细的分析报告。</p>
+                <p>请注意保护您的API密钥安全，避免泄露。数据将通过安全通道发送至AI模型进行分析。</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 根据选择的模型显示对应的配置项
+    document.getElementById('selected_model').addEventListener('change', function() {
+        const model = this.value;
+        document.getElementById('deepseek_config').style.display = model === 'deepseek' ? 'block' : 'none';
+        document.getElementById('doubao_config').style.display = model === 'doubao' ? 'block' : 'none';
+        document.getElementById('qwen_config').style.display = model === 'qwen' ? 'block' : 'none';
+    });
+    
+    // 初始化显示
+    const selectedModel = document.getElementById('selected_model').value;
+    document.getElementById('deepseek_config').style.display = selectedModel === 'deepseek' ? 'block' : 'none';
+    document.getElementById('doubao_config').style.display = selectedModel === 'doubao' ? 'block' : 'none';
+    document.getElementById('qwen_config').style.display = selectedModel === 'qwen' ? 'block' : 'none';
+    
+    // API密钥测试功能
+    document.querySelectorAll('.test-api-key').forEach(button => {
+        button.addEventListener('click', async function() {
+            const model = this.getAttribute('data-model');
+            const apiKeyField = this.getAttribute('data-api-key-field');
+            const apiKey = document.getElementById(apiKeyField).value;
+            
+            if (!apiKey) {
+                alert('请先输入API密钥');
+                return;
+            }
+            
+            const originalText = this.textContent;
+            this.textContent = '测试中...';
+            this.disabled = true;
+            
+            try {
+                const response = await fetch('/test_api_key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        api_key: apiKey
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('API密钥测试成功！');
+                } else {
+                    alert('API密钥测试失败: ' + result.error);
+                }
+            } catch (error) {
+                alert('测试过程中发生错误: ' + error.message);
+            } finally {
+                this.textContent = originalText;
+                this.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}
